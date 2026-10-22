@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SRS Practice Quiz</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 24px;
+      font-family: system-ui, sans-serif;
+      background: #f1f5f9;
+      color: #172033;
+    }
+
+    main {
+      max-width: 650px;
+      margin: 40px auto;
+      padding: 28px;
+      background: white;
+      border-radius: 18px;
+      box-shadow: 0 8px 30px #17203312;
+    }
+
+    h1 {
+      margin-top: 0;
+    }
+
+    #progress {
+      color: #526078;
+    }
+
+    fieldset {
+      margin: 24px 0;
+      padding: 0;
+      border: none;
+    }
+
+    legend {
+      margin-bottom: 16px;
+      font-size: 1.2rem;
+      font-weight: 600;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 10px;
+      padding: 14px;
+      border: 1px solid #cbd5e1;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+
+    label:has(input:checked) {
+      background: #eef2ff;
+      border-color: #4f46e5;
+    }
+
+    input {
+      margin-right: 8px;
+    }
+
+    button {
+      padding: 12px 18px;
+      border: none;
+      border-radius: 8px;
+      background: #4338ca;
+      color: white;
+      font: inherit;
+      cursor: pointer;
+    }
+
+    button:disabled {
+      opacity: 0.5;
+      cursor: default;
+    }
+
+    button:focus-visible,
+    input:focus-visible {
+      outline: 3px solid #f59e0b;
+      outline-offset: 4px;
+    }
+
+    #feedback {
+      line-height: 1.6;
+    }
+
+    .correct {
+      color: #166534;
+    }
+
+    .incorrect {
+      color: #991b1b;
+    }
+  </style>
+</head>
+
+<body>
+  <main>
+    <h1>SRS Practice Quiz</h1>
+    <p>Test your understanding of software requirements.</p>
+
+    <p id="progress"></p>
+
+    <form id="quiz-form">
+      <fieldset id="question-area">
+        <legend id="question"></legend>
+        <div id="options"></div>
+      </fieldset>
+
+      <button id="check" type="submit">Check answer</button>
+      <button id="next" type="button" hidden>Next question</button>
+    </form>
+
+    <p id="feedback" role="status"></p>
+    <button id="restart" type="button" hidden>Try again</button>
+  </main>
+
+  <script>
+    // Each question contains its choices, correct answer, and explanation.
+    // Answer positions start at 0: the first choice is 0, the second is 1.
+    const questions = [
+      {
+        question: "What is the main purpose of an SRS?",
+        options: [
+          "To record the application's source code",
+          "To specify required software behaviour and constraints",
+          "To record daily study hours"
+        ],
+        answer: 1,
+        explanation:
+          "An SRS defines required behaviour, quality expectations, " +
+          "interfaces, and constraints. It guides design and testing."
+      },
+      {
+        question: "Which statement is a functional requirement?",
+        options: [
+          "The system shall allow a learner to save a study goal.",
+          "The system shall achieve 99.5% monthly availability.",
+          "The project has a fixed delivery budget."
+        ],
+        answer: 0,
+        explanation:
+          "Saving a study goal is system behaviour. Availability is " +
+          "a quality requirement, while a fixed budget is a constraint."
+      },
+      {
+        question: "What is an assumption?",
+        options: [
+          "A verified test result",
+          "A restriction the solution must follow",
+          "A condition believed to be true but not yet verified"
+        ],
+        answer: 2,
+        explanation:
+          "Assumptions are unverified beliefs. Important assumptions " +
+          "should be recorded and checked."
+      }
+    ];
+
+    let currentQuestion = 0;
+    let score = 0;
+    let answered = false;
+
+    const form = document.querySelector("#quiz-form");
+    const questionArea = document.querySelector("#question-area");
+    const questionText = document.querySelector("#question");
+    const optionsArea = document.querySelector("#options");
+    const progress = document.querySelector("#progress");
+    const feedback = document.querySelector("#feedback");
+    const checkButton = document.querySelector("#check");
+    const nextButton = document.querySelector("#next");
+    const restartButton = document.querySelector("#restart");
+
+    function displayQuestion() {
+      answered = false;
+
+      const item = questions[currentQuestion];
+
+      progress.textContent =
+        `Question ${currentQuestion + 1} of ${questions.length}`;
+
+      questionText.textContent = item.question;
+      optionsArea.replaceChildren();
+      feedback.textContent = "";
+      feedback.className = "";
+
+      questionArea.disabled = false;
+      checkButton.disabled = false;
+      checkButton.hidden = false;
+      nextButton.hidden = true;
+
+      item.options.forEach((option, index) => {
+        const label = document.createElement("label");
+        const input = document.createElement("input");
+
+        input.type = "radio";
+        input.name = "answer";
+        input.value = index;
+
+        label.append(input, document.createTextNode(option));
+        optionsArea.append(label);
+      });
+    }
+
+    form.addEventListener("submit", (event) => {
+      event.preventDefault();
+
+      // Prevent awarding points twice for the same question.
+      if (answered) return;
+
+      const selected =
+        document.querySelector('input[name="answer"]:checked');
+
+      if (!selected) {
+        feedback.className = "";
+        feedback.textContent = "Choose an answer first.";
+        return;
+      }
+
+      answered = true;
+
+      const item = questions[currentQuestion];
+      const isCorrect = Number(selected.value) === item.answer;
+
+      if (isCorrect) score++;
+
+      feedback.className = isCorrect ? "correct" : "incorrect";
+      feedback.textContent =
+        (isCorrect ? "Correct! " : "Not quite. ") +
+        item.explanation;
+
+      questionArea.disabled = true;
+      checkButton.disabled = true;
+      nextButton.hidden = false;
+
+      nextButton.textContent =
+        currentQuestion === questions.length - 1
+          ? "See results"
+          : "Next question";
+
+      nextButton.focus();
+    });
+
+    nextButton.addEventListener("click", () => {
+      currentQuestion++;
+
+      if (currentQuestion < questions.length) {
+        displayQuestion();
+        optionsArea.querySelector("input").focus();
+      } else {
+        form.hidden = true;
+        progress.textContent = "Practice complete";
+        feedback.className = "";
+        feedback.textContent =
+          `You scored ${score} out of ${questions.length}.`;
+
+        restartButton.hidden = false;
+        restartButton.focus();
+      }
+    });
+
+    restartButton.addEventListener("click", () => {
+      currentQuestion = 0;
+      score = 0;
+
+      form.hidden = false;
+      restartButton.hidden = true;
+
+      displayQuestion();
+      optionsArea.querySelector("input").focus();
+    });
+
+    displayQuestion();
+  </script>
+</body>
+</html>
