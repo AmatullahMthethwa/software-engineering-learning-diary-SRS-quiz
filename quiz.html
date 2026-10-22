@@ -1,282 +1,54 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>SRS Practice Quiz</title>
-
-  <style>
-    * {
-      box-sizing: border-box;
-    }
-
-    body {
-      margin: 0;
-      padding: 24px;
-      font-family: system-ui, sans-serif;
-      background: #f1f5f9;
-      color: #172033;
-    }
-
-    main {
-      max-width: 650px;
-      margin: 40px auto;
-      padding: 28px;
-      background: white;
-      border-radius: 18px;
-      box-shadow: 0 8px 30px #17203312;
-    }
-
-    h1 {
-      margin-top: 0;
-    }
-
-    #progress {
-      color: #526078;
-    }
-
-    fieldset {
-      margin: 24px 0;
-      padding: 0;
-      border: none;
-    }
-
-    legend {
-      margin-bottom: 16px;
-      font-size: 1.2rem;
-      font-weight: 600;
-    }
-
-    label {
-      display: block;
-      margin-bottom: 10px;
-      padding: 14px;
-      border: 1px solid #cbd5e1;
-      border-radius: 10px;
-      cursor: pointer;
-    }
-
-    label:has(input:checked) {
-      background: #eef2ff;
-      border-color: #4f46e5;
-    }
-
-    input {
-      margin-right: 8px;
-    }
-
-    button {
-      padding: 12px 18px;
-      border: none;
-      border-radius: 8px;
-      background: #4338ca;
-      color: white;
-      font: inherit;
-      cursor: pointer;
-    }
-
-    button:disabled {
-      opacity: 0.5;
-      cursor: default;
-    }
-
-    button:focus-visible,
-    input:focus-visible {
-      outline: 3px solid #f59e0b;
-      outline-offset: 4px;
-    }
-
-    #feedback {
-      line-height: 1.6;
-    }
-
-    .correct {
-      color: #166534;
-    }
-
-    .incorrect {
-      color: #991b1b;
-    }
-  </style>
-</head>
-
-<body>
-  <main>
-    <h1>SRS Practice Quiz</h1>
-    <p>Test your understanding of software requirements.</p>
-
-    <p id="progress"></p>
-
-    <form id="quiz-form">
-      <fieldset id="question-area">
-        <legend id="question"></legend>
-        <div id="options"></div>
-      </fieldset>
-
-      <button id="check" type="submit">Check answer</button>
-      <button id="next" type="button" hidden>Next question</button>
-    </form>
-
-    <p id="feedback" role="status"></p>
-    <button id="restart" type="button" hidden>Try again</button>
-  </main>
-
-  <script>
-    // Each question contains its choices, correct answer, and explanation.
-    // Answer positions start at 0: the first choice is 0, the second is 1.
-    const questions = [
-      {
-        question: "What is the main purpose of an SRS?",
-        options: [
-          "To record the application's source code",
-          "To specify required software behaviour and constraints",
-          "To record daily study hours"
-        ],
-        answer: 1,
-        explanation:
-          "An SRS defines required behaviour, quality expectations, " +
-          "interfaces, and constraints. It guides design and testing."
-      },
-      {
-        question: "Which statement is a functional requirement?",
-        options: [
-          "The system shall allow a learner to save a study goal.",
-          "The system shall achieve 99.5% monthly availability.",
-          "The project has a fixed delivery budget."
-        ],
-        answer: 0,
-        explanation:
-          "Saving a study goal is system behaviour. Availability is " +
-          "a quality requirement, while a fixed budget is a constraint."
-      },
-      {
-        question: "What is an assumption?",
-        options: [
-          "A verified test result",
-          "A restriction the solution must follow",
-          "A condition believed to be true but not yet verified"
-        ],
-        answer: 2,
-        explanation:
-          "Assumptions are unverified beliefs. Important assumptions " +
-          "should be recorded and checked."
-      }
-    ];
-
-    let currentQuestion = 0;
-    let score = 0;
-    let answered = false;
-
-    const form = document.querySelector("#quiz-form");
-    const questionArea = document.querySelector("#question-area");
-    const questionText = document.querySelector("#question");
-    const optionsArea = document.querySelector("#options");
-    const progress = document.querySelector("#progress");
-    const feedback = document.querySelector("#feedback");
-    const checkButton = document.querySelector("#check");
-    const nextButton = document.querySelector("#next");
-    const restartButton = document.querySelector("#restart");
-
-    function displayQuestion() {
-      answered = false;
-
-      const item = questions[currentQuestion];
-
-      progress.textContent =
-        `Question ${currentQuestion + 1} of ${questions.length}`;
-
-      questionText.textContent = item.question;
-      optionsArea.replaceChildren();
-      feedback.textContent = "";
-      feedback.className = "";
-
-      questionArea.disabled = false;
-      checkButton.disabled = false;
-      checkButton.hidden = false;
-      nextButton.hidden = true;
-
-      item.options.forEach((option, index) => {
-        const label = document.createElement("label");
-        const input = document.createElement("input");
-
-        input.type = "radio";
-        input.name = "answer";
-        input.value = index;
-
-        label.append(input, document.createTextNode(option));
-        optionsArea.append(label);
-      });
-    }
-
-    form.addEventListener("submit", (event) => {
-      event.preventDefault();
-
-      // Prevent awarding points twice for the same question.
-      if (answered) return;
-
-      const selected =
-        document.querySelector('input[name="answer"]:checked');
-
-      if (!selected) {
-        feedback.className = "";
-        feedback.textContent = "Choose an answer first.";
-        return;
-      }
-
-      answered = true;
-
-      const item = questions[currentQuestion];
-      const isCorrect = Number(selected.value) === item.answer;
-
-      if (isCorrect) score++;
-
-      feedback.className = isCorrect ? "correct" : "incorrect";
-      feedback.textContent =
-        (isCorrect ? "Correct! " : "Not quite. ") +
-        item.explanation;
-
-      questionArea.disabled = true;
-      checkButton.disabled = true;
-      nextButton.hidden = false;
-
-      nextButton.textContent =
-        currentQuestion === questions.length - 1
-          ? "See results"
-          : "Next question";
-
-      nextButton.focus();
-    });
-
-    nextButton.addEventListener("click", () => {
-      currentQuestion++;
-
-      if (currentQuestion < questions.length) {
-        displayQuestion();
-        optionsArea.querySelector("input").focus();
-      } else {
-        form.hidden = true;
-        progress.textContent = "Practice complete";
-        feedback.className = "";
-        feedback.textContent =
-          `You scored ${score} out of ${questions.length}.`;
-
-        restartButton.hidden = false;
-        restartButton.focus();
-      }
-    });
-
-    restartButton.addEventListener("click", () => {
-      currentQuestion = 0;
-      score = 0;
-
-      form.hidden = false;
-      restartButton.hidden = true;
-
-      displayQuestion();
-      optionsArea.querySelector("input").focus();
-    });
-
-    displayQuestion();
-  </script>
-</body>
-</html>
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>SRS Practice Quiz</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#eff3fa;color:#172033;font:17px/1.6 system-ui,sans-serif}main{max-width:850px;margin:35px auto;padding:32px;background:white;border-radius:22px;box-shadow:0 12px 45px #18274b12}h1{margin:0;font-size:2rem}h2{font-size:1.3rem}p{margin:12px 0}.muted{color:#53627a}.eyebrow{color:#4338ca;font-size:.8rem;letter-spacing:.12em;font-weight:750}progress{width:100%;height:12px;accent-color:#4338ca}button,select{font:inherit}button{background:#4338ca;color:white;border:0;border-radius:9px;padding:10px 17px;cursor:pointer}button.secondary{background:#edf0fa;color:#30297e}button:disabled{opacity:.45;cursor:default}button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visible{outline:3px solid #d97706;outline-offset:3px}.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:22px}.choice{display:flex;gap:12px;padding:14px;border:1px solid #cbd5e1;border-radius:10px;margin:10px 0;cursor:pointer}.choice:has(input:checked){background:#eef2ff;border-color:#6366f1}input{flex-shrink:0}fieldset{border:0;padding:0;margin:0}legend{font-weight:600;margin-bottom:10px}.order-row{display:flex;align-items:center;gap:9px;padding:10px;border:1px solid #dbe2ef;border-radius:10px;margin:9px 0}.order-row span{flex:1}.order-row button{padding:7px 12px}.match{display:block;margin:14px 0;font-weight:650}select{display:block;width:100%;margin-top:6px;padding:10px;border:1px solid #b8c4d8;border-radius:8px;background:white;color:#172033;font-size:.95rem}#feedback{padding:0}#feedback:not(:empty){padding:15px;border-radius:10px;background:#f1f5f9}.correct{border-left:5px solid #15803d}.incomplete{border-left:5px solid #ca8a04}.incorrect{border-left:5px solid #b91c1c}details{margin-top:16px}summary{cursor:pointer;font-weight:650}li{margin:6px 0}.result{padding:14px 0;border-bottom:1px solid #dbe2ef}[hidden]{display:none!important}@media(max-width:600px){main{margin:0;padding:22px 16px;border-radius:0}h1{font-size:1.7rem}.order-row{font-size:.95rem}.order-row button{padding:8px}}
+</style></head><body><main>
+<div class="eyebrow">LEARN • RECALL • APPLY</div><h1>SRS Practice Quiz</h1><p class="muted">Nine activities. Choices and puzzle positions shuffle with each new attempt.</p><p id="progress" class="muted"></p><progress id="bar" value="0" max="12" aria-label="Quiz progress"></progress>
+<section id="play"><h2 id="title" tabindex="-1"></h2><p id="instruction" class="muted"></p><form id="form"><fieldset id="answers"><legend class="muted">Your answer</legend><div id="options"></div></fieldset><div class="actions"><button id="check">Check answer</button><button id="retry" type="button" class="secondary" hidden>Try this again</button><button id="next" type="button" hidden>Continue</button></div></form><div id="feedback" role="status" aria-live="polite"></div><details id="solution" hidden><summary>Reveal answer and explanation</summary><div id="explanation"></div></details></section>
+<section id="results" hidden><h2>Practice complete</h2><p id="score"></p><p class="muted">Results record your first checked answer in each round. Retries are for practice. No partial points; each round counts equally.</p><div id="review"></div><button id="restart" type="button">Start a fresh attempt</button></section><p class="muted" style="font-size:.85rem;margin-top:28px">This quiz follows our chosen BRD → SRS → design workflow and SRS outline. Progress resets when you reload the page.</p>
+</main><script>
+const shuffle=a=>{a=[...a];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+const sections=[
+['cover','Cover page','Identifies the project, document version, date, and author.'],
+['contents','Table of contents','Helps readers navigate sections and subsections.'],
+['history','Revision history','Records meaningful changes to the document.'],
+['intro','Introduction','Explains document purpose, audience, and project scope.'],
+['overall','Overall description','Explains product context, users, environment, assumptions, dependencies, and constraints.'],
+['rules','Business rules','Defines policies, conditions, limits, and governing calculations.'],
+['functional','Functional requirements','Specifies what the system must do.'],
+['uses','Use cases','Describes actor–system interactions to achieve a goal.'],
+['data','Data requirements','Defines data, relationships, validation, and lifecycle requirements.'],
+['external','External interface requirements','Defines required interactions with users and external systems.'],
+['quality','Nonfunctional requirements','Defines required quality levels and operating conditions.'],
+['reports','Reporting requirements','Defines report content, logic, presentation, timing, and access.'],
+['support','Supporting information','Provides glossary, references, appendices, and review or decision records.']];
+function choices(id,title,type,correct,wrong,explanation){return{id,title,type,options:[...correct.map(([id,text])=>({id,text,correct:true})),...wrong.map(([id,text])=>({id,text,correct:false}))],explanation}}
+const bank=[
+choices('q1','1. What does SRS stand for?','single',[['software','Software Requirements Specification']],[['system','System Requirements Specification'],['roles','System Roles Specification'],['wrong','Software Requirements System']],'SRS stands for Software Requirements Specification.'),
+choices('q2','2. What does an SRS specify?','multi',[['behaviour','What the software system must do'],['quality','Quality expectations it must meet'],['constraints','Constraints under which it must operate']],[['code','A complete listing of application source code'],['journal','Daily records of the developer’s study sessions']],'An SRS describes required behaviour, quality expectations, and constraints. It supports design, implementation, testing, and acceptance.'),
+choices('q3','3. Which activities does an SRS guide?','multi',[['design','Solution design'],['implementation','Implementation'],['testing','Testing'],['acceptance','Acceptance']],[['guarantee','Guaranteeing commercial success'],['attendance','Recording daily employee attendance']],'Requirements inform design and implementation, provide expected results for tests, and support evaluating acceptance. They do not guarantee commercial success.'),
+choices('q4','4. In our chosen workflow, what do we prepare and review before the SRS?','single',[['brd','Business Requirements Document (BRD)']],[['design','Detailed Implementation Design'],['code','Complete application source code'],['release','Deployment release notes']],'We chose to prepare and review a BRD first. A separate BRD is not mandatory in every project; business needs can be documented in other ways.'),
+choices('q5','5. What information does the BRD provide as input to the SRS?','multi',[['problem','The problem being addressed'],['goals','Business goals'],['stakeholders','Stakeholders'],['scope','Project scope'],['outcomes','Desired outcomes']],[['source','Finished application source code'],['tables','Final physical database table definitions']],'The BRD establishes the business context: problem, goals, stakeholders, scope, and desired outcomes. Detailed implementation decisions generally follow.'),
+{id:'q6',title:'6. Arrange our project documentation sequence.',type:'order',items:[['brd','BRD'],['srs','SRS'],['design','Detailed Implementation Design']],explanation:'Our chosen sequence is BRD → SRS → Detailed Implementation Design. In practice, findings can lead to revisions of earlier documents.'},
+choices('q7','7. Which groups use or review an SRS?','multi',[['technical','Technical team'],['sme','Subject matter experts (SMEs)'],['qa','Quality assurance (QA) team'],['uat','User acceptance testing (UAT) participants'],['approvers','Authorised decision-makers']],[['everyone','Every member of the public, regardless of involvement']],'The technical team builds from requirements; SMEs check domain accuracy; QA derives tests; UAT participants evaluate needs; assigned decision-makers approve the baseline. These responsibilities can overlap.'),
+{id:'q8a',title:'8. Arrange our SRS opening sections — round 1 of 2.',type:'order',items:sections.slice(0,3).map(s=>s.slice(0,2)),explanation:'Our template uses cover page → table of contents → revision history. Other front-matter arrangements can also be valid.'},
+{id:'q8b',title:'8. Arrange our SRS main sections — round 2 of 2.',type:'order',items:sections.slice(3).map(s=>s.slice(0,2)),explanation:'This order matches our notes. SRS structures vary across projects; this is an exercise in our chosen outline.'},
+...[sections.slice(0,4),sections.slice(4,9),sections.slice(9)].map((pairs,i)=>({id:'q9'+i,title:`9. Match each section to its purpose — round ${i+1} of 3.`,type:'match',pairs,explanation:'Use the purpose of each section to distinguish it from neighbouring sections. A section may reference information documented elsewhere.'}))
+];
+const $=id=>document.getElementById(id);let rounds,position,records,locked;
+function start(){rounds=bank.map(q=>({...q,options:q.options?shuffle(q.options):undefined,order:q.items?shuffle(q.items):undefined,rows:q.pairs?shuffle(q.pairs):undefined,pool:q.pairs?shuffle(q.pairs):undefined}));position=0;records=[];$('results').hidden=true;$('play').hidden=false;render()}
+function button(text,fn,label){const b=document.createElement('button');b.type='button';b.className='secondary';b.textContent=text;b.setAttribute('aria-label',label);b.onclick=fn;return b}
+function render(){locked=false;const q=rounds[position];$('title').textContent=q.title;$('progress').textContent=`Round ${position+1} of ${rounds.length} · ${records.filter(r=>r.correct).length} first-check points`;$('bar').max=rounds.length;$('bar').value=position;$('instruction').textContent=q.type==='single'?'Choose one answer.':q.type==='multi'?'Select all correct answers.':q.type==='order'?'Arrange from first to last using the arrow buttons.':'Choose the matching description for every section.';$('answers').disabled=false;$('options').replaceChildren();$('feedback').replaceChildren();$('feedback').className='';$('solution').hidden=true;$('solution').open=false;$('check').hidden=false;$('retry').hidden=true;$('next').hidden=true;
+if(q.options)q.options.forEach(o=>{const l=document.createElement('label');l.className='choice';const input=document.createElement('input');input.type=q.type==='single'?'radio':'checkbox';input.name='answer';input.value=o.id;l.append(input,document.createTextNode(o.text));$('options').append(l)});
+if(q.type==='order')renderOrder();
+if(q.type==='match')q.rows.forEach(([id,name])=>{const l=document.createElement('label');l.className='match';l.textContent=name;const s=document.createElement('select');s.dataset.id=id;s.add(new Option('Choose a description…',''));q.pool.forEach(([value,,text])=>s.add(new Option(text,value)));l.append(s);$('options').append(l)});
+}
+function renderOrder(focus){const q=rounds[position];$('options').replaceChildren();q.order.forEach(([id,text],i)=>{const row=document.createElement('div');row.className='order-row';const name=document.createElement('span');name.textContent=`${i+1}. ${text}`;row.append(name);for(const [delta,arrow,word] of [[-1,'↑','up'],[1,'↓','down']]){const b=button(arrow,()=>{const j=i+delta;[q.order[i],q.order[j]]=[q.order[j],q.order[i]];renderOrder({id,delta})},`Move ${text} ${word}`);b.disabled=i+delta<0||i+delta>=q.order.length;b.dataset.id=id;b.dataset.delta=delta;row.append(b)}$('options').append(row)});if(focus){const candidates=[...$('options').querySelectorAll('button')].filter(b=>b.dataset.id===focus.id);(candidates.find(b=>Number(b.dataset.delta)===focus.delta&&!b.disabled)||candidates.find(b=>!b.disabled))?.focus()}}
+function evaluate(q){if(q.options){const selected=new Set([...document.querySelectorAll('input[name=answer]:checked')].map(i=>i.value));if(!selected.size)return{empty:true};const wrong=q.options.filter(o=>selected.has(o.id)&&!o.correct).length;const missing=q.options.filter(o=>o.correct&&!selected.has(o.id)).length;return{wrong,missing,correct:!wrong&&!missing,detail:`${wrong} incorrect selection(s); ${missing} correct answer(s) missing.`}}
+if(q.type==='order'){const right=q.items.filter(([id],i)=>q.order[i][0]===id).length;return{wrong:q.items.length-right,missing:0,correct:right===q.items.length,detail:`${right} of ${q.items.length} items are in the correct position.`}}
+const selects=[...$('options').querySelectorAll('select')];if(selects.every(s=>!s.value))return{empty:true};const missing=selects.filter(s=>!s.value).length;const wrong=selects.filter(s=>s.value&&s.value!==s.dataset.id).length;return{missing,wrong,correct:!missing&&!wrong,detail:`${selects.length-missing-wrong} correct match(es); ${wrong} incorrect; ${missing} unanswered.`}}
+function reveal(q){$('explanation').replaceChildren();const p=document.createElement('p');p.textContent=q.explanation;$('explanation').append(p);const list=document.createElement(q.type==='order'?'ol':'ul');const texts=q.options?q.options.filter(o=>o.correct).map(o=>o.text):q.type==='order'?q.items.map(i=>i[1]):q.pairs.map(([,name,text])=>`${name}: ${text}`);texts.forEach(text=>{const li=document.createElement('li');li.textContent=text;list.append(li)});$('explanation').append(list);$('solution').hidden=false}
+$('form').onsubmit=e=>{e.preventDefault();if(locked)return;const q=rounds[position],r=evaluate(q);if(r.empty){$('feedback').className='';$('feedback').textContent='Choose at least one answer before checking.';return}locked=true;const label=r.correct?'Correct':r.wrong&&r.missing?'Incorrect and incomplete':r.wrong?'Incorrect':'Incomplete';if(!records[position])records[position]={...r,label,title:q.title};$('feedback').className=r.correct?'correct':r.wrong?'incorrect':'incomplete';$('feedback').textContent=`${label}. ${r.detail} ${r.correct?'Well done.':'Try again or reveal the answer below. Your first-check score is already recorded.'}`;$('answers').disabled=true;$('check').hidden=true;$('retry').hidden=r.correct;$('next').hidden=false;reveal(q);$('next').textContent=position===rounds.length-1?'See results':'Continue';$('next').focus()};
+$('retry').onclick=()=>{locked=false;$('answers').disabled=false;$('check').hidden=false;$('retry').hidden=true;$('next').hidden=true;$('solution').hidden=true;$('solution').open=false;$('feedback').textContent='Adjust your answer and check again.';($('options').querySelector('input,select,button')||$('title')).focus()};
+$('next').onclick=()=>{position++;if(position<rounds.length){render();$('title').focus();return}$('play').hidden=true;$('results').hidden=false;$('bar').value=rounds.length;$('progress').textContent='All nine activities completed';const points=records.filter(r=>r.correct).length;$('score').textContent=`First-check score: ${points} / ${rounds.length} rounds (${Math.round(points/rounds.length*100)}%).`;$('review').replaceChildren();records.forEach(r=>{const p=document.createElement('p');p.className='result';p.textContent=`${r.title} — ${r.label}`;$('review').append(p)});$('restart').focus()};$('restart').onclick=()=>{start();$('title').focus()};start();
+</script></body></html>
